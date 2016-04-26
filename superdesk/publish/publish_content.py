@@ -107,14 +107,17 @@ def transmit_subscriber_items(self, queue_items, subscriber):
             transmitter = superdesk.publish.registered_transmitters[destination.get('delivery_type')]
             transmitter.transmit(queue_item)
             logger.info('Transmitted queue item {}'.format(log_msg))
-        except:
+        except Exception as e:
             logger.exception('Failed to transmit queue item {}'.format(log_msg))
+
             max_retry_attempt = app.config.get('MAX_TRANSMIT_RETRY_ATTEMPT')
             retry_attempt_delay = app.config.get('TRANSMIT_RETRY_ATTEMPT_DELAY_MINUTES')
             try:
                 orig_item = publish_queue_service.find_one(req=None, _id=queue_item['_id'])
                 updates = {config.LAST_UPDATED: utcnow()}
-                if orig_item.get('retry_attempt', 0) < max_retry_attempt:
+
+                # only retry on 5xx responses.
+                if orig_item.get('retry_attempt', 0) < max_retry_attempt and e.http_code >=500 and e.http_code < 600:
                     updates['retry_attempt'] = orig_item.get('retry_attempt', 0) + 1
                     updates['state'] = QueueState.RETRYING.value
                     updates['next_retry_attempt_at'] = utcnow() + timedelta(minutes=retry_attempt_delay)

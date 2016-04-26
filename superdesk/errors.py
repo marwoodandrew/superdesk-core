@@ -553,9 +553,14 @@ class PublishHTTPPushError(SuperdeskPublishError):
         14000: "HTTP push publish error",
     }
 
+    def __init__(self, code, exception, destination=None, http_code=None):
+        super().__init__(code, exception, destination)
+
+        self.http_code = http_code
+
     @classmethod
-    def httpPushError(cls, exception=None, destination=None):
-        return PublishHTTPPushError(14000, exception, destination)
+    def httpPushError(cls, exception=None, destination=None, http_code=None):
+        return PublishHTTPPushError(14000, exception, destination, http_code)
 
 
 class AlreadyExistsError(Exception):

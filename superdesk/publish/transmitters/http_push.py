@@ -44,7 +44,7 @@ class HTTPPushService(PublishService):
             response = requests.post(resource_url, data=json.dumps(item), headers=self.headers)
             if response.status_code not in (requests.codes.created, requests.codes.accepted):  # @UndefinedVariable
                 message = 'Error pushing item %s: %s' % (response.status_code, response.text)
-                raise PublishHTTPPushError.httpPushError(Exception(message, destination))
+                raise PublishHTTPPushError.httpPushError(Exception(message, destination, response.status_code))
 
     def _copy_published_media_files(self, item, assets_url):
         """Copy the media files for the given item to the publish_items endpoint
